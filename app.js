@@ -77,8 +77,9 @@
         function response(res) {
             $scope.regs = res.responseText;
             $scope.regs = $scope.regs.split("\n");
+            var fr_unit = '3';
             $scope.data = {
-                'Flow Rate':$scope.real4($scope.regs[1],$scope.regs[2]) + '  m3/h',
+                'Flow Rate':$scope.real4($scope.regs[1],$scope.regs[2]) + '  m' + fr_unit.sup() + '/h',
                 'Energy Flow Rate':$scope.real4($scope.regs[3],$scope.regs[4]) + '  GJ/h',
                 'Velocity':$scope.real4($scope.regs[5],$scope.regs[6]) + '  m/s',
                 'Fluid sound speed':$scope.real4($scope.regs[7],$scope.regs[8]) + '  m/s',
@@ -99,12 +100,12 @@
                 "Analog input AI3":[$scope.real4($scope.regs[37],$scope.regs[38])],
                 "Analog input AI4":[$scope.real4($scope.regs[39],$scope.regs[40])],
                 "Analog input AI5":[$scope.real4($scope.regs[41],$scope.regs[42])],
-                "Current input at AI3":[$scope.real4($scope.regs[43],$scope.regs[44]) + "mA"],
-                "Current input at AI3":[$scope.real4($scope.regs[45],$scope.regs[46]) + "mA"],
-                "Current input at AI3":[$scope.real4($scope.regs[47],$scope.regs[48]) + "mA"],
-                "System password":[$scope.bcd($scope.regs[49],$scope.regs[50])],
+                "Current input at AI3":[$scope.real4($scope.regs[43],$scope.regs[44]) + "  mA"],
+                "Current input at AI4":[$scope.real4($scope.regs[45],$scope.regs[46]) + "  mA"],
+                "Current input at AI5":[$scope.real4($scope.regs[47],$scope.regs[48]) + "  mA"],
+                "System password":[$scope.bcd($scope.regs[49]) + $scope.bcd($scope.regs[50])],
                 "Password for hardware":[$scope.bcd($scope.regs[51])],
-                "Calendar (date and time)":[$scope.bcd($scope.regs[53],$scope.regs[54],$scope.regs[55])],
+                "Calendar (date and time)":[$scope.bcd($scope.regs[54]) + $scope.bcd($scope.regs[53]) + $scope.bcd($scope.regs[55])],
                 "Day+Hour for Auto-Save":[$scope.bcd($scope.regs[56])],
                 "Key to input":[$scope.integer($scope.regs[59])],
                 "Go to Window":[$scope.integer($scope.regs[60])],
@@ -112,31 +113,30 @@
                 "Times for the beeper":[$scope.integer($scope.regs[62])],
                 "Pulses left for OCT":[$scope.integer($scope.regs[62])],
                 "Error code":[$scope.bit($scope.regs[72])],
-                "PT100 resistance of inlet":[$scope.real4($scope.regs[77],$scope.regs[78]) + "Ohm"],
-                "PT100 resistance of outlet":[$scope.real4($scope.regs[79],$scope.regs[80]) + "Ohm"],
-                "Total travel time":[$scope.real4($scope.regs[81],$scope.regs[82]) + "Micro-sec"],
-                "Delta travel time":[$scope.real4($scope.regs[83],$scope.regs[84]) + "Nano-sec"],
-                "Upstream travel time":[$scope.real4($scope.regs[85],$scope.regs[86]) + "Micro-sec"],
-                "Downstream travel time":[$scope.real4($scope.regs[87],$scope.regs[88]) + "Micro-sec"],
-                "Output current":[$scope.real4($scope.regs[89],$scope.regs[90]) + "mA"],
-                "The rate of the measured travel time by the calculated travel time":[$scope.real4($scope.regs[97],$scope.regs[98]) + "Normal 100+-3%"],
+                "PT100 resistance of inlet":[$scope.real4($scope.regs[77],$scope.regs[78]) + "  Ohm"],
+                "PT100 resistance of outlet":[$scope.real4($scope.regs[79],$scope.regs[80]) + "  Ohm"],
+                "Total travel time":[$scope.real4($scope.regs[81],$scope.regs[82]) + "  Micro-sec"],
+                "Delta travel time":[$scope.real4($scope.regs[83],$scope.regs[84]) + "  Nano-sec"],
+                "Upstream travel time":[$scope.real4($scope.regs[85],$scope.regs[86]) + "  Micro-sec"],
+                "Downstream travel time":[$scope.real4($scope.regs[87],$scope.regs[88]) + "  Micro-sec"],
+                "Output current":[$scope.real4($scope.regs[89],$scope.regs[90]) + "  mA"],
+                "The rate of the measured travel time by the calculated travel time":[$scope.real4($scope.regs[97],$scope.regs[98]) + "  Normal 100+-3%"],
                 "Reynolds number":[$scope.real4($scope.regs[99],$scope.regs[100])]
             };
 
             var keys = Object.keys($scope.data);
-            var myTable= "<table><tr><td> Metric </td>";
+            var myTable= "<table align='center'><tr><td> Metric </td>";
             myTable+= "<td> Value </td>";
 
             for (var i=0; i<keys.length; i++) {
                 myTable+="<tr><td>" + keys[i] + "</td>";
                 myTable+="<td>" + $scope.data[keys[i]] + "</td>";
-                //myTable+="<td style='width: 100px; text-align: right;'>" + $scope.data[keys[i][1]] + "</td></tr>";
             }
 
             myTable+="</table>";
 
             document.getElementById('table').innerHTML = myTable;
-            console.log($scope.regs);
+            console.log($scope.data);
         }
 
         $scope.real4 = function(a,b) {
@@ -193,11 +193,8 @@
                 " ROM check-sum error "," temperature circuits error "," reserved "," Bit14 internal timer over flow "," analog input over range "];
 
             $scope.err = $scope.split2(a);
-            console.log(a);
-            console.log($scope.err);
             $scope.err_arr = $scope.err.split('');
             $scope.err_arr = $scope.err_arr.reverse();
-            console.log($scope.err_arr);
             $scope.err_send = [];
 
             for(var i=0;i<=$scope.err_arr.length;i++) {
@@ -208,54 +205,19 @@
             return $scope.err_send;
         };
 
-        $scope.bcd = function (a,b,c) {
+        $scope.bcd = function (a) {
 
-            if (typeof a == 'string' && typeof b == 'undefined' && typeof c == 'undefined') {
-
-                bcd48 = $scope.split2(a);
-                bcd48_arr = [];
-                for(var i=4;i<=48;i+=4) {
-                    bcd48_arr.push(bcd48.slice(i-4,i));
-                }
-
-                for (var j=0;j<=11;j++) {
-                    bcd48_arr[j] = parseInt(bcd48_arr[j],2);
-                }
-
-                return bcd48_arr.join('');
-
-        }
-
-            else if (typeof a == 'string' && typeof b == 'string' && typeof c == 'undefined') {
-
-                var bcd48 = $scope.split2(a,b);
+                var bcd48 = $scope.split2(a);
                 var bcd48_arr = [];
-                for(var i=4;i<=48;i+=4) {
+                for(var i=4;i<=16;i+=4) {
                     bcd48_arr.push(bcd48.slice(i-4,i));
                 }
 
-                for (var j=0;j<=11;j++) {
+                for (var j=0;j<=3;j++) {
                     bcd48_arr[j] = parseInt(bcd48_arr[j],2);
                 }
 
                 return bcd48_arr.join('');
-        }
-
-            else {
-
-                var bcd48 = $scope.split2(a,b,c);
-                var bcd48_arr = [];
-                for(var i=4;i<=48;i+=4) {
-                    bcd48_arr.push(bcd48.slice(i-4,i));
-                }
-
-                for (var j=0;j<=11;j++) {
-                    bcd48_arr[j] = parseInt(bcd48_arr[j],2);
-                }
-
-                return bcd48_arr.join('');
-        }
-
 
         };
 
