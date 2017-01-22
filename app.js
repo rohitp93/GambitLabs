@@ -5,9 +5,6 @@
     app.controller('myCtrl', function ($scope, $http) {
 
         var url = "http://tuftuf.gambitlabs.fi/feed.txt";
-        var regs = [];
-
-        $scope.regs = regs;
 
  /*       $scope.httpGet = function()
         {
@@ -116,10 +113,51 @@
             $scope.text = res.responseText;
             $scope.regs = $scope.text.split("\n");
 
-            $scope.real4("1:15568","2:16611");
-            $scope.integer("92:806");
-            $scope.long("21:65480","22:65535");
+            //var rl41 = $scope.real4("1:15568","2:16611");
+            //var int1 = $scope.integer("92:806");
+            //var lon1 = $scope.long("21:65480","22:65535");
+            var tim = $scope.bcd("53:6432","54:4386","55:5889");
+            //var err = $scope.bit("72:4");
+            console.log(tim);
+            //console.log(rl41);
+            //console.log(lon1);
+            //console.log(int1);
         }
+
+        $scope.split2 = function (a,b,c) {
+
+            if (typeof a == 'string' && typeof b == 'undefined' && typeof c == 'undefined') {
+                first_reg = (a.split(":"));
+                first = (first_reg[1] >> 0).toString(2);
+                return $scope.zeroes(first);
+            }
+
+            else if (typeof a == 'string' && typeof b == 'string' && typeof c == 'undefined') {
+                first_reg = (a.split(":"));
+                second_reg = (b.split(":"));
+                first = (first_reg[1] >> 0).toString(2);
+                second = (second_reg[1] >> 0).toString(2);
+
+                first16 = $scope.zeroes(first);
+                second16 = $scope.zeroes(second);
+                return (second16.concat(first16));
+            }
+
+            else if (typeof a == 'string' && typeof b == 'string' && typeof c == 'string') {
+                var first_reg = (a.split(":"));
+                var second_reg = (b.split(":"));
+                var third_reg = (c.split(":"));
+
+                var first = (first_reg[1] >> 0).toString(2);
+                var second = (second_reg[1] >> 0).toString(2);
+                var third = (third_reg[1] >> 0).toString(2);
+
+                var first16 = $scope.zeroes(first);
+                var second16 = $scope.zeroes(second);
+                var third16 = $scope.zeroes(third);
+                return (third16.concat(second16.concat(first16)));
+            }
+        };
 
         $scope.real4 = function(a,b) {
 
@@ -150,7 +188,7 @@
         };
 
         $scope.integer = function(a) {
-            var integer = $scope.split1(a);
+            var integer = $scope.split2(a);
             var last8 = [];
             for (var l=7;l<=15;l++) {
                 last8[l-8] = integer[l];
@@ -163,32 +201,27 @@
         $scope.long = function (a,b) {
 
             var long32 = $scope.split2(a,b);
-            console.log(parseFloat(long32,2));
+            return parseInt(long32,2) >> 0;
 
-        }
+        };
 
-        $scope.split2 = function (a,b) {
+        $scope.bit = function (a) {
 
-            var first_reg = (a.split(":"));
-            var second_reg = (b.split(":"));
+            var err = $scope.split2(a);
 
-            var first = (first_reg[1] >> 0).toString(2);
-            var second = (second_reg[1] >> 0).toString(2);
+        };
 
-            var first16 = $scope.zeroes(first);
-            var second16 = $scope.zeroes(second);
+        $scope.bcd = function (a,b,c) {
 
-            var bin32 = second16.concat(first16);
-            return bin32;
-        }
+            var bcd48 = $scope.split2(a,b,c);
+            bcd48 = bcd48.split('');
 
-        $scope.split1 = function (a) {
+            while(bcd48.length) {
+                bcd48 = bcd48.splice(0,4)
+            }
+            console.log(bcd48);
 
-            var first_reg = (a.split(":"));
-            var first = (first_reg[1] >> 0).toString(2);
-            var first16 = $scope.zeroes(first);
-            return first16;
-        }
+        };
 
         $scope.zeroes = function (num) {
 
@@ -199,9 +232,15 @@
                 for (var k = 0; k < i; k++) {
                     zero = "0".concat(zero);
                 }
-                return zero.concat(num)
+                return zero.concat(num);
             }
-        }
+
+            else
+            {
+                return num;
+            }
+
+        };
 
 
 
