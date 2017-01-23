@@ -6,6 +6,8 @@
 
         var url = "http://tuftuf.gambitlabs.fi/feed.txt";
 
+        // Ajax request for feed.txt data
+        // Uses Yahoo api to avoid CORS(Cross origin resource sharing) issue
         jQuery.ajax = (function(_ajax){
 
             var protocol = location.protocol,
@@ -74,11 +76,16 @@
             success: response
         });
 
+        // Handles the response
         function response(res) {
+
             $scope.regs = res.responseText;
             $scope.regs = $scope.regs.split("\n");
+
+            //To put metre cube in Flow rate units
             var fr_unit = '3';
 
+            //To show language given by 96th register
             if ($scope.integer($scope.regs[96]) > 0) {
                 var lang = "English";
             }
@@ -86,6 +93,7 @@
                 lang = "Chinese";
             }
 
+            // All the Metrics in one object with their processed values
             $scope.data = {
                 'Flow Rate':[$scope.real4($scope.regs[1],$scope.regs[2]) + '  m' + fr_unit.sup() + '/h'],
                 'Energy Flow Rate':[$scope.real4($scope.regs[3],$scope.regs[4]) + '  GJ/h'],
@@ -137,6 +145,8 @@
             };
 
             var keys = Object.keys($scope.data);
+
+            //Create a html table to display in index.html
             var myTable= "<table align='center'><tr><th> Metric </th>";
             myTable+= "<th> Value </th>";
 
@@ -150,6 +160,7 @@
 
         }
 
+        // Function to handle real4 data type metrics
         $scope.real4 = function(a,b) {
 
             var bin16_a = $scope.split2(a);
@@ -178,6 +189,7 @@
             return send;
         };
 
+        // Function to handle integer data type metrics
         $scope.integer = function(a) {
             var integer = $scope.split2(a);
             var last8 = [];
@@ -189,6 +201,7 @@
             return last8;
         };
 
+        // Function to handle long data type metrics
         $scope.long = function (a,b) {
 
             var long16_a = $scope.split2(a);
@@ -197,6 +210,7 @@
             return parseInt(long32,2) >> 0;
         };
 
+        // Function to handle bit data type metrics
         $scope.bit = function (a) {
 
             var err_st = [" no received signal "," low received signal "," poor received signal ",
@@ -219,6 +233,7 @@
             return err_send;
         };
 
+        // Function to handle BCD data type metrics
         $scope.bcd = function (a) {
 
             var bcd48 = $scope.split2(a);
@@ -236,6 +251,7 @@
 
         };
 
+        // Function to divide the register number and value and convert the value into 16bit binary
         $scope.split2 = function (a) {
 
             var first_reg = (a.split(":"));
