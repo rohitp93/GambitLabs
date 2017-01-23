@@ -1,21 +1,23 @@
-#table {
-    border-collapse: collapse;
-    float: left;
+h1{
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-    width: 100%;
+}
+#table {
+    margin-left: 3cm;
+    border-collapse: collapse;
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    width: 80%;
 }
 #table td {
-    border: 1px solid #dddddd;
     padding: 8px;
+    text-align: center;
+    border: 1px solid #dddddd;
 }
 #table th {
+    padding: 8px;
+    text-align: center;
     background-color: #000000;
     border: 1px solid #dddddd;
     color: white;
-    padding-bottom: 12px;
-    padding-top: 12px;
-    padding: 8px;
-    text-align: left;
 }
 #table tr {
     background-color: #f2f2f2;

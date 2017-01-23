@@ -78,11 +78,19 @@
             $scope.regs = res.responseText;
             $scope.regs = $scope.regs.split("\n");
             var fr_unit = '3';
+
+            if ($scope.integer($scope.regs[96]) > 0) {
+                var lang = "English";
+            }
+            else {
+                lang = "Chinese";
+            }
+
             $scope.data = {
-                'Flow Rate':$scope.real4($scope.regs[1],$scope.regs[2]) + '  m' + fr_unit.sup() + '/h',
-                'Energy Flow Rate':$scope.real4($scope.regs[3],$scope.regs[4]) + '  GJ/h',
-                'Velocity':$scope.real4($scope.regs[5],$scope.regs[6]) + '  m/s',
-                'Fluid sound speed':$scope.real4($scope.regs[7],$scope.regs[8]) + '  m/s',
+                'Flow Rate':[$scope.real4($scope.regs[1],$scope.regs[2]) + '  m' + fr_unit.sup() + '/h'],
+                'Energy Flow Rate':[$scope.real4($scope.regs[3],$scope.regs[4]) + '  GJ/h'],
+                'Velocity':[$scope.real4($scope.regs[5],$scope.regs[6]) + '  m/s'],
+                'Fluid sound speed':[$scope.real4($scope.regs[7],$scope.regs[8]) + '  m/s'],
                 "Positive accumulator":[$scope.long($scope.regs[9],$scope.regs[10])],
                 "Positive decimal fraction":[$scope.real4($scope.regs[11],$scope.regs[12])],
                 "Negative accumulator":[$scope.long($scope.regs[13],$scope.regs[14])],
@@ -120,13 +128,17 @@
                 "Upstream travel time":[$scope.real4($scope.regs[85],$scope.regs[86]) + "  Micro-sec"],
                 "Downstream travel time":[$scope.real4($scope.regs[87],$scope.regs[88]) + "  Micro-sec"],
                 "Output current":[$scope.real4($scope.regs[89],$scope.regs[90]) + "  mA"],
-                "The rate of the measured travel time by the calculated travel time":[$scope.real4($scope.regs[97],$scope.regs[98]) + "  Normal 100+-3%"],
+                "Working step and Signal Quality":[$scope.integer($scope.regs[92])],
+                "Upstream strength":[$scope.integer($scope.regs[93]) + "  (Range 0-2047)"],
+                "Downstream strength":[$scope.integer($scope.regs[94]) + "  (Range 0-2047)"],
+                "Language used in user interface":lang,
+                "The rate of the measured travel time by the calculated travel time":[$scope.real4($scope.regs[97],$scope.regs[98]) + "  (Normal 100+-3%)"],
                 "Reynolds number":[$scope.real4($scope.regs[99],$scope.regs[100])]
             };
 
             var keys = Object.keys($scope.data);
-            var myTable= "<table align='center'><tr><td> Metric </td>";
-            myTable+= "<td> Value </td>";
+            var myTable= "<table align='center'><tr><th> Metric </th>";
+            myTable+= "<th> Value </th>";
 
             for (var i=0; i<keys.length; i++) {
                 myTable+="<tr><td>" + keys[i] + "</td>";
@@ -134,21 +146,21 @@
             }
 
             myTable+="</table>";
-
             document.getElementById('table').innerHTML = myTable;
-            console.log($scope.data);
+
         }
 
         $scope.real4 = function(a,b) {
 
-            var bin32 = $scope.split2(a,b);
+            var bin16_a = $scope.split2(a);
+            var bin16_b = $scope.split2(b);
+            var bin32 = bin16_b.concat(bin16_a);
             var exp_arr = [];
 
             for (var l=1;l<=8;l++){
                 exp_arr[l-1] = bin32[l];
-                var exp = exp_arr.join("");
             }
-
+            var exp = exp_arr.join("");
             exp = parseInt(exp,2) - 127;
 
             var man = 0;
@@ -157,7 +169,6 @@
             }
 
             man = 1 + man;
-
             if (bin32[0] == '1') {
                 var send = (Math.pow(2,exp)) * man * -1;
             }
@@ -180,9 +191,10 @@
 
         $scope.long = function (a,b) {
 
-            var long32 = $scope.split2(a,b);
+            var long16_a = $scope.split2(a);
+            var long16_b = $scope.split2(b);
+            var long32 = long16_b.concat(long16_a);
             return parseInt(long32,2) >> 0;
-
         };
 
         $scope.bit = function (a) {
@@ -192,87 +204,57 @@
                 " current at 4-20mA over flow "," RAM check-sum error "," main clock or timer clock error "," parameters check-sum error ",
                 " ROM check-sum error "," temperature circuits error "," reserved "," Bit14 internal timer over flow "," analog input over range "];
 
-            $scope.err = $scope.split2(a);
-            $scope.err_arr = $scope.err.split('');
-            $scope.err_arr = $scope.err_arr.reverse();
-            $scope.err_send = [];
+            var err = $scope.split2(a);
 
-            for(var i=0;i<=$scope.err_arr.length;i++) {
-                if ($scope.err_arr[i] == 1) {
-                    $scope.err_send.push(err_st[i]);
+            var err_arr = err.split('');
+            err_arr = err_arr.reverse();
+
+            var err_send = [];
+
+            for(var i=0;i<=err_arr.length;i++) {
+                if (err_arr[i] == 1) {
+                    err_send.push(err_st[i]);
                 }
             }
-            return $scope.err_send;
+            return err_send;
         };
 
         $scope.bcd = function (a) {
 
-                var bcd48 = $scope.split2(a);
-                var bcd48_arr = [];
-                for(var i=4;i<=16;i+=4) {
-                    bcd48_arr.push(bcd48.slice(i-4,i));
+            var bcd48 = $scope.split2(a);
+            var bcd48_arr = [];
+
+            for(var i=4;i<=16;i+=4) {
+                 bcd48_arr.push(bcd48.slice(i-4,i));
                 }
 
-                for (var j=0;j<=3;j++) {
+            for (var j=0;j<=3;j++) {
                     bcd48_arr[j] = parseInt(bcd48_arr[j],2);
                 }
 
-                return bcd48_arr.join('');
+            return bcd48_arr.join('');
 
         };
 
-        $scope.split2 = function (a,b,c) {
+        $scope.split2 = function (a) {
 
-            if (typeof a == 'string' && typeof b == 'undefined' && typeof c == 'undefined') {
-                first_reg = (a.split(":"));
-                first = (first_reg[1] >> 0).toString(2);
-                return $scope.zeroes(first);
-            }
+            var first_reg = (a.split(":"));
+            var first = (first_reg[1] >> 0).toString(2);
 
-            else if (typeof a == 'string' && typeof b == 'string' && typeof c == 'undefined') {
-                first_reg = (a.split(":"));
-                second_reg = (b.split(":"));
-                first = (first_reg[1] >> 0).toString(2);
-                second = (second_reg[1] >> 0).toString(2);
-
-                first16 = $scope.zeroes(first);
-                second16 = $scope.zeroes(second);
-                return (second16.concat(first16));
-            }
-
-            else if (typeof a == 'string' && typeof b == 'string' && typeof c == 'string') {
-                var first_reg = (a.split(":"));
-                var second_reg = (b.split(":"));
-                var third_reg = (c.split(":"));
-
-                var first = (first_reg[1] >> 0).toString(2);
-                var second = (second_reg[1] >> 0).toString(2);
-                var third = (third_reg[1] >> 0).toString(2);
-
-                var first16 = $scope.zeroes(first);
-                var second16 = $scope.zeroes(second);
-                var third16 = $scope.zeroes(third);
-                return (third16.concat(second16.concat(first16)));
-            }
-        };
-
-        $scope.zeroes = function (num) {
-
-            if (num.length != 16) {
-                var i = 16 - num.length;
+            if (first.length != 16) {
+                var i = 16 - first.length;
                 var zero = "";
 
                 for (var k = 0; k < i; k++) {
                     zero = "0".concat(zero);
                 }
-                return zero.concat(num);
+                return zero.concat(first);
             }
 
             else
             {
-                return num;
+                return first;
             }
-
         };
 
 
